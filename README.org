@@ -1,0 +1,11 @@
+#+TITLE: Samuel's Obtain
+
+* terrain
+
+its in a cave, so the floor and the ceiling both have terrain information. This includes height and crystal density and crystal size. They can be randomly generated once, and then tweaked as needed.
+
+* Story
+
+Open, cinematic sky view of red crystal, then green, then blue. Everything is low poly with hard edges. Then camera goes back to the character, you see's the three pyers in the distance. They are arranged in a equalateral triangle, but tilted in a fashion that each pyer is evenly spaced in the direction of the player. Then the camera pans out back to the sky looking down on the player. The camera zooms back over the player's shoulder when a pyer comes into a good view. When right next to a pyer, the camera returns to a far out sky view so as to see the whole pyer.
+
+You start to walk towards the blue pyer (which is also the direction of all the pyers. The camera cannot be controlled so the player does not have a choice). You find dimly lit crystals on the way. They burn a dim white when you get near them and make a low pitched scifi powering up sound. **mrrrrEEEMMMM! Once you reach the blue pyer, it starts to glow more brilliantly and makes a simular sound but lower and louder. As you walk to the next pyer, you notice the crystals you touch now have a blue tint. The same thing happens when you reach the other two pyers. Crystals you touch become a combination of pyers you've collected. Finally returning to white once you have collected them all. However, this final white is much more brilliant than it was originally, demonstrating your hero's journey is complete.
