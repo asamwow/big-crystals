@@ -9,13 +9,17 @@ Transform::Transform() {
 }
 
 Transform::Transform(Transform &transform) {
-   position = glm::vec3(transform.position.x, transform.position.y,
-                        transform.position.z);
-   // there must be a more efficient way to initialize rotation
-   rotation = glm::quat(transform.rotation.w, transform.rotation.x,
-                        transform.rotation.y, transform.rotation.z);
-   scale = glm::vec3(transform.scale.x, transform.scale.y, transform.scale.z);
+   Copy(&transform);
    parent = NULL;
+}
+
+void Transform::Copy(Transform *transform) {
+   position = glm::vec3(transform->position.x, transform->position.y,
+                        transform->position.z);
+   // there must be a more efficient way to initialize rotation
+   rotation = glm::quat(transform->rotation.w, transform->rotation.x,
+                        transform->rotation.y, transform->rotation.z);
+   scale = glm::vec3(transform->scale.x, transform->scale.y, transform->scale.z);
 }
 
 Transform::Transform(glm::vec3 position, glm::vec3 scale, glm::quat rotation)

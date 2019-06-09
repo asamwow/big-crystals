@@ -98,6 +98,7 @@ class Application : public EventCallbacks {
       }
       if (key == GLFW_KEY_L && action == GLFW_PRESS) {
          Scene::mainCamera->transform->log();
+         exit(0);
       }
 
       // keyboard component
@@ -384,12 +385,20 @@ int main(int argc, char *argv[]) {
    application->gameCamera->camera =
        (class Camera *)application->gameCamera->AddComponent(Type::Camera);
    Scene::mainCamera = application->gameCamera->camera;
-   application->gameCamera->ForwardTransform = new Transform(
+   application->gameCamera->ForwardNearTransform = new Transform(
        glm::vec3(-0.340025, 8.573741, -29.776596), glm::vec3(1.f, 1.f, 1.f),
        glm::quat(0.021025, 0.003097, 0.997585, 0.066484));
-   application->gameCamera->BackwardTransform = new Transform(
+   application->gameCamera->BackwardFarTransform = new Transform(
+       glm::vec3(-20.316292, 16.553699, 140.759277), glm::vec3(1.f, 1.f, 1.f),
+       glm::quat(-0.999828, -0.011186, -0.016011, 0.000445));
+   application->gameCamera->ForwardTransform = new Transform(*application->gameCamera->ForwardNearTransform);
+   application->gameCamera->BackwardNearTransform = new Transform(
        glm::vec3(-0.340025, 8.573741, 29.776596), glm::vec3(1.f, 1.f, 1.f),
        glm::quat(-0.998704, -0.052789, -0.004661, 0.001826));
+   application->gameCamera->BackwardTransform = new Transform(*application->gameCamera->BackwardNearTransform);
+   application->gameCamera->ForwardFarTransform = new Transform(
+       glm::vec3(22.512974, 12.103701, -123.862465), glm::vec3(1.f, 1.f, 1.f),
+       glm::quat(0.032620, -0.000033, 0.999496, 0.003819));
    application->gameCamera->GroundUpTransform = new Transform(
        glm::vec3(-1.332427f, -0.791858f, -3.887569f), glm::vec3(1.f, 1.f, 1.f),
        glm::quat(0.043826f, -0.003553f, 0.990929f, -0.127502f));
@@ -397,8 +406,8 @@ int main(int argc, char *argv[]) {
 
    // input
    // application->mouseInput =
-   //     (class MouseInput *)application->gameCamera->AddComponent(
-   //         Type::MouseInput);
+       // (class MouseInput *)application->gameCamera->AddComponent(
+           // Type::MouseInput);
 
    // window
    windowManager->init(SCR_WIDTH, SCR_HEIGHT);
@@ -487,12 +496,12 @@ int main(int argc, char *argv[]) {
    application->gameCamera->keyboardInput = NULL;
 
    if (application->keyboardInput != NULL) {
-      application->keyboardInput->forwardKey = GLFW_KEY_W;
-      application->keyboardInput->backwardKey = GLFW_KEY_S;
-      application->keyboardInput->rightKey = GLFW_KEY_D;
-      application->keyboardInput->leftKey = GLFW_KEY_A;
-      application->keyboardInput->upKey = GLFW_KEY_R;
-      application->keyboardInput->downKey = GLFW_KEY_C;
+      application->keyboardInput->forwardKey = GLFW_KEY_E;
+      application->keyboardInput->backwardKey = GLFW_KEY_J;
+      application->keyboardInput->rightKey = GLFW_KEY_K;
+      application->keyboardInput->leftKey = GLFW_KEY_Q;
+      application->keyboardInput->upKey = GLFW_KEY_U;
+      application->keyboardInput->downKey = GLFW_KEY_D;
    }
 
    printf("Starting GameObjects\n");

@@ -19,6 +19,11 @@ class Player : public Bulb {
    class KeyboardInput *keyboardInput;
    class GameCamera *gameCamera;
 
+   char far = false;
+   char flippedWhileFar = false;
+
+   float closestCrystalDistance = 9999999.f;
+   
    void Flip();
 
    void Awake();

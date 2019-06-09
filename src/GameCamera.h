@@ -5,6 +5,7 @@
 #include "Component.h"
 #include "Camera.h"
 #include "KeyboardInput.h"
+#include "Light.h"
 
 class GameCamera : public GameObject {
  public:
@@ -19,12 +20,20 @@ class GameCamera : public GameObject {
    float PanTime;
 
    Transform *ForwardTransform;
+   Transform *ForwardFarTransform;
+   Transform *ForwardNearTransform;
    Transform *BackwardTransform;
+   Transform *BackwardFarTransform;
+   Transform *BackwardNearTransform;
    Transform *GroundUpTransform;
 
-   void StartPan(Transform *start, Transform *end, float time, float startTime);
+   Transform *ModifyTransform;
+
+   void StartPan(Transform *start, Transform *end, float time, float startTime, Transform *toMod);
    void FlipPan(char forward);
+   void FarPan(char far, char forward);
    void InitialPan();
+   void ResetDistance();
    
    void Awake();
    void Update();

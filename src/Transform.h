@@ -35,6 +35,7 @@ class Transform {
    glm::vec3 up();
 
    void slerp(Transform *startNode, Transform *endNode, float index);
+   void Copy(Transform *transform);
 
    void SetGlobalMatrix(std::shared_ptr<MatrixStack> matirxStack);
 

@@ -20,7 +20,6 @@ void Scene::Awake() {
 void Scene::Start() {
    // start game object functions
    for (int i = 0; i < sceneObjects.size(); i++) {
-     printf("starting object\n");
       ((class GameObject *)sceneObjects[i])->Start();
    }
 }

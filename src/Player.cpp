@@ -38,9 +38,35 @@ void Player::Update() {
    if (transform.position.y > MAX_AMPLITUDE * 1.2f) {
       transform.position.y = MAX_AMPLITUDE * 1.2f;
    }
+   for (int i = 0; i < Scene::currentScene->lights.size(); i++) {
+      class Light *light = (class Light *)Scene::currentScene->lights[i];
+      float distance = glm::distance(light->transform->getGlobalPosition(),
+                                     transform.getGlobalPosition());
+      if (distance < closestCrystalDistance ||  far == i + 1) {
+         closestCrystalDistance = distance;
+      } else {
+         continue;
+      }
+      if (distance < 1000.f) {
+         if (!far) {
+            far = i+1;
+            gameCamera->FarPan(far, forward);
+         }
+      } else {
+         if (far && !flippedWhileFar) {
+            gameCamera->FarPan(false, forward);
+         }
+         far = false;
+         flippedWhileFar = false;
+      }
+   }
 }
 
 void Player::Flip() {
    Bulb::Flip();
+   if (far) {
+      flippedWhileFar = true;
+      gameCamera->ResetDistance();
+   }
    gameCamera->FlipPan(forward);
 }
