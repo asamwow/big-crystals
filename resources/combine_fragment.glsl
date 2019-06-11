@@ -19,6 +19,6 @@ void main()
     vec3 result = vec3(1.0f) - exp(-hdrColor * exposure);
     // also gamma correct while we're at it       
     result = pow(result, vec3(1.0f / gamma));
-    // result = vec3(texture(depth, TexCoords).x / 10.f);
+    // result = vec3(texture(shadows, TexCoords).x);
     FragColor = vec4(result, 1.0f);
 }

@@ -54,12 +54,14 @@ class Application : public EventCallbacks {
    Program *lightedFaceShader;
    Program *blurShader;
    Program *combineShader;
+   Program *depthShader;
 
    unsigned int hdrFBO;
-   unsigned int colorBuffers[2];
-   unsigned int attachments[2];
+   unsigned int colorBuffers[3];
+   unsigned int attachments[3];
    unsigned int rboDepth;
    unsigned int depthMap;
+   unsigned int depthMapFBO;
    unsigned int pingpongFBO[2];
    unsigned int pingpongColorbuffers[2];
 
@@ -70,7 +72,8 @@ class Application : public EventCallbacks {
 
    class GameCamera *gameCamera;
    class Player *player;
-
+   class GameObject *light;
+  
    class MouseInput *mouseInput = NULL;
    class KeyboardInput *keyboardInput = NULL;
 
@@ -145,8 +148,12 @@ class Application : public EventCallbacks {
       faceShader->addUniform("P");
       faceShader->addUniform("V");
       faceShader->addUniform("M");
+      faceShader->addUniform("lightV");
       faceShader->addAttribute("vertPos");
       faceShader->addAttribute("color");
+      faceShader->bind();
+      faceShader->setIntUniform("shadows", 0);
+      faceShader->unbind();
       Material::defaultMaterial = new class Material();
       Material::defaultMaterial->shader = faceShader;
       Material::defaultMaterial->emission = 0.f;
@@ -162,6 +169,7 @@ class Application : public EventCallbacks {
       lightedFaceShader->addUniform("emission");
       lightedFaceShader->addAttribute("vertPos");
       lightedFaceShader->addAttribute("color");
+      lightedFaceShader->addAttribute("depth");
       Material::crystalMaterial = new class Material();
       Material::crystalMaterial->shader = lightedFaceShader;
       Material::crystalMaterial->emission = 10.f;
@@ -192,10 +200,51 @@ class Application : public EventCallbacks {
       blurShader->setIntUniform("image", 0);
       blurShader->unbind();
 
+      depthShader = new Program();
+      depthShader->setShaderNames(resourceDirectory + "/simple_depth_vert.glsl",
+                                  resourceDirectory + "/simple_depth_frag.glsl");
+      depthShader->init();
+      depthShader->addUniform("P");
+      depthShader->addUniform("V");
+      depthShader->addUniform("M");
+      depthShader->addAttribute("vertPos");
+      depthShader->addAttribute("color");
+      depthShader->addAttribute("depth");
+
+      // depth
+      glGenFramebuffers(1, &depthMapFBO);  
+
+      glGenTextures(1, &depthMap);
+      glBindTexture(GL_TEXTURE_2D, depthMap);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT,
+                   0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+
+      glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+      glDrawBuffer(GL_NONE);
+      glReadBuffer(GL_NONE);
+      glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+
+
       // hdr color buffer
       glGenFramebuffers(1, &hdrFBO);
       glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
-      glGenTextures(2, colorBuffers);
+      glGenTextures(3, colorBuffers);
+      glBindTexture(GL_TEXTURE_2D, colorBuffers[2]);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0,
+                   GL_RGB, GL_FLOAT, NULL);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,
+                             GL_TEXTURE_2D, colorBuffers[2], 0);
       for (unsigned int i = 0; i < 2; i++) {
          glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0,
@@ -209,26 +258,9 @@ class Application : public EventCallbacks {
       }
       attachments[0] = GL_COLOR_ATTACHMENT0;
       attachments[1] = GL_COLOR_ATTACHMENT1;
-      glDrawBuffers(2, attachments);
-
-      // depth buffer
-      // glGenRenderbuffers(1, &rboDepth);
-      // glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-      // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH,
-      //                       SCR_HEIGHT);
-      // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-      //                           GL_RENDERBUFFER, rboDepth);
-      glGenTextures(1, &depthMap);
-      glBindTexture(GL_TEXTURE_2D, depthMap);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT,
-                   0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-
+      attachments[2] = GL_COLOR_ATTACHMENT2;
+      glDrawBuffers(3, attachments);
+      
       if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
          std::cout << "Framebuffer not complete!" << std::endl;
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -258,7 +290,6 @@ class Application : public EventCallbacks {
       int width, height;
       double mousex, mousey;
       glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
-      glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
       glfwGetCursorPos(windowManager->getHandle(), &mousex, &mousey);
 
@@ -266,6 +297,7 @@ class Application : public EventCallbacks {
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
                              depthMap, 0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glEnable(GL_DEPTH_TEST);
 
       float aspect = width / (float)height;
       gameCamera->camera->aspect = aspect;
@@ -273,11 +305,16 @@ class Application : public EventCallbacks {
       auto View = make_shared<MatrixStack>();
       auto Model = make_shared<MatrixStack>();
       gameCamera->camera->SetViewMatrix(Projection, View);
+      glm::mat4 lightView = glm::lookAt(light->transform.getGlobalPosition(), 
+                                        Scene::mainCamera->transform->getGlobalPosition(), 
+                                        glm::vec3( 0.0f, 1.0f,  0.0f));
       faceShader->bind();
       glUniformMatrix4fv(faceShader->getUniform("P"), 1, GL_FALSE,
                          value_ptr(Projection->topMatrix()));
       glUniformMatrix4fv(faceShader->getUniform("V"), 1, GL_FALSE,
                          value_ptr(View->topMatrix()));
+      glUniformMatrix4fv(faceShader->getUniform("lightV"), 1, GL_FALSE,
+                         value_ptr(lightView));
       faceShader->unbind();
       lightedFaceShader->bind();
       glUniformMatrix4fv(lightedFaceShader->getUniform("P"), 1, GL_FALSE,
@@ -286,8 +323,46 @@ class Application : public EventCallbacks {
                          value_ptr(View->topMatrix()));
       lightedFaceShader->unbind();
 
+      glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+      // glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+      glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+      glClear(GL_DEPTH_BUFFER_BIT);
+
       Scene::mainCamera->ExtractVFPlanes(Projection->topMatrix(),
                                          View->topMatrix());
+      
+      // lightView = View->topMatrix();
+      depthShader->bind();
+      glUniformMatrix4fv(depthShader->getUniform("P"), 1, GL_FALSE,
+                         value_ptr(Projection->topMatrix()));
+      glUniformMatrix4fv(depthShader->getUniform("V"), 1, GL_FALSE,
+                         value_ptr(lightView));
+
+      for (int i = 0; i < scene.renderers.size(); i++) {
+         class MeshRenderer *renderer =
+             (class MeshRenderer *)scene.renderers[i];
+         Transform *rendererTransform = renderer->transform;
+         if (renderer->material->shader != lightedFaceShader) {
+           continue;
+         }
+         rendererTransform->SetGlobalMatrix(Model);
+         glUniformMatrix4fv(depthShader->getUniform("M"), 1, GL_FALSE,
+                            value_ptr(Model->topMatrix()));
+         renderer->mesh->draw(depthShader);
+         Model->popMatrix();
+         Model->popMatrix();
+      }
+      depthShader->unbind();
+
+      // return;
+      glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+      glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+      glClear(GL_DEPTH_BUFFER_BIT);
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, colorBuffers[2]);
+
+      glUniformMatrix4fv(lightedFaceShader->getUniform("V"), 1, GL_FALSE,
+                         value_ptr(View->topMatrix()));
 
       for (int i = 0; i < scene.renderers.size(); i++) {
          class MeshRenderer *renderer =
@@ -306,6 +381,7 @@ class Application : public EventCallbacks {
          Model->popMatrix();
          shader->unbind();
       }
+      glDisable(GL_DEPTH_TEST);
 
       // // clean up
       Projection->popMatrix();
@@ -330,7 +406,7 @@ class Application : public EventCallbacks {
 
       // combine bloom and scene
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glClear(GL_COLOR_BUFFER_BIT);
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
       glActiveTexture(GL_TEXTURE1);
@@ -412,6 +488,9 @@ int main(int argc, char *argv[]) {
        glm::vec3(-1.332427f, -0.791858f, -3.887569f), glm::vec3(1.f, 1.f, 1.f),
        glm::quat(0.043826f, -0.003553f, 0.990929f, -0.127502f));
    application->gameCamera->InitialPan();
+   application->light = new GameObject();
+   application->light->transform.position = glm::vec3(100, 2000, 100);
+   application->light->transform.parent = &(application->gameCamera->transform);
 
    // input
    // application->mouseInput =
@@ -505,10 +584,10 @@ int main(int argc, char *argv[]) {
    application->gameCamera->keyboardInput = NULL;
 
    if (application->keyboardInput != NULL) {
-      application->keyboardInput->forwardKey = GLFW_KEY_E;
-      application->keyboardInput->backwardKey = GLFW_KEY_J;
-      application->keyboardInput->rightKey = GLFW_KEY_K;
-      application->keyboardInput->leftKey = GLFW_KEY_Q;
+      application->keyboardInput->forwardKey = GLFW_KEY_W;
+      application->keyboardInput->backwardKey = GLFW_KEY_S;
+      application->keyboardInput->rightKey = GLFW_KEY_D;
+      application->keyboardInput->leftKey = GLFW_KEY_A;
       application->keyboardInput->upKey = GLFW_KEY_U;
       application->keyboardInput->downKey = GLFW_KEY_D;
    }

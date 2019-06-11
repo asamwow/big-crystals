@@ -20,6 +20,7 @@ class Player : public Bulb {
    class GameCamera *gameCamera;
 
    char far = false;
+  char startedFlipForward;
 
   char flipQueued = false;
    float delay = 0.f;

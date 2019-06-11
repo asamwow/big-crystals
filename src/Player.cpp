@@ -15,7 +15,9 @@ void Player::Update() {
    if (delay > 1.f) {
      if (flipQueued) {
        gameCamera->ResetDistance(forward);
-       gameCamera->FlipPan(forward);
+       if (startedFlipForward != forward) {
+         gameCamera->FlipPan(forward);
+       }
        flipQueued = false;
      }
    }
@@ -65,6 +67,9 @@ void Player::Update() {
 }
 
 void Player::Flip() {
+  if (delay > 1.f) {
+   startedFlipForward = forward;
+  }
    Bulb::Flip();
    flipQueued = true;
    delay = 0.f;

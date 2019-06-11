@@ -11,5 +11,5 @@ void main()
 {
 	gl_Position = P * V * M * vertPos;
   depth = gl_Position.z / 50000.f;
-  VertexColor = vec4(color.x, color.y, color.z, 0.f);
+  VertexColor = vec4(color, 1.f);
 }
