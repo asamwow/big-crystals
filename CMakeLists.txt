@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 2.7)
 project(obtain)
 
 # Use glob to get the list of all source files.
-file(GLOB_RECURSE SOURCES "src/*.cpp" "ext/*/*.cpp" "ext/glad/src/*.c")
+file(GLOB_RECURSE SOURCES "src/*.cpp" "ext/*/*.cpp" "ext/glad/src/*.c" "ext/irrKlang/include/*" "ext/irrKlang/plugins/*")
+
 
 # We don't really need to include header and resource files to build, but it's
 # nice to have them show up in IDEs.
@@ -13,11 +14,11 @@ file(GLOB_RECURSE GLSL "resources/*.glsl")
 
 include_directories("ext")
 include_directories("ext/glad/include")
+include_directories("ext/irrKlang/include")
+include_directories("ext/irrKlang/plugins")
 
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
-
-
 
 # Add GLFW
 # Get the GLFW environment variable.
@@ -90,3 +91,15 @@ else()
     target_link_libraries(${CMAKE_PROJECT_NAME} "GL" "dl")
   endif()
 endif()
+
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L\"/usr/lib\" ../ext/irrKlang/bin/linux-gcc/libIrrKlang.so -pthread")
+# add_subdirectory("ext/irrKlang/bin/linux-gcc")
+# include_directories("ext/irrKlang/bin/linux-gcc")
+# find_package(irrKlang)
+# link_directories(ext/irrKlang/bin/linux-gcc)
+# find_library(irrKlang ../ext/irrKlang/bin/linux-gcc)
+# TARGET_LINK_LIBRARIES(${CMAKE_PROJECT_NAME} /home/asamwow/samuels-obtain/ext/irrKlang/bin/linux-gcc/libIrrKlang.so)
+set(irrKlang "")
+# FIND_LIBRARY(irrKlang NAMES library PATHS /home/asamwow/samuels-obtain/ext/irrKlang/bin/linux-gcc/)
+# TARGET_LINK_LIBRARIES(obtain ${irrKlang})
+TARGET_LINK_LIBRARIES(obtain IrrKlang)

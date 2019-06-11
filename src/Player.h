@@ -20,14 +20,17 @@ class Player : public Bulb {
    class GameCamera *gameCamera;
 
    char far = false;
-   char flippedWhileFar = false;
 
+  char flipQueued = false;
+   float delay = 0.f;
+  
    float closestCrystalDistance = 9999999.f;
    
    void Flip();
 
    void Awake();
    void Update();
+  void OnCollision(class Collider *other);
 };
 
 #endif

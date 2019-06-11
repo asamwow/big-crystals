@@ -14,11 +14,11 @@ void GameCamera::InitialPan() {
 }
 
 void GameCamera::FlipPan(char forward) {
-   if (forward && PanStart != BackwardTransform) {
+  if (forward) {
       StartPan(BackwardTransform, ForwardTransform, 0.5f, PanTime - PanIndex,
                &transform);
    }
-   if (!forward && PanStart != ForwardTransform) {
+  if (!forward) {
       StartPan(ForwardTransform, BackwardTransform, 0.5f, PanTime - PanIndex,
                &transform);
    }
@@ -38,11 +38,11 @@ void GameCamera::FarPan(char far, char forward) {
       modTransform = BackwardTransform;
    }
    if (far && PanStart != nearTransform) {
-      StartPan(nearTransform, farTransform, 3.f, PanTime - PanIndex,
+      StartPan(nearTransform, farTransform, 3.f, 0.f,
                modTransform);
    }
    if (!far && PanStart != farTransform) {
-      StartPan(farTransform, nearTransform, 3.f, PanTime - PanIndex,
+      StartPan(&transform, nearTransform, 3.f, 0.f,
                modTransform);
    }
 }
@@ -50,6 +50,15 @@ void GameCamera::FarPan(char far, char forward) {
 void GameCamera::ResetDistance() {
    ForwardTransform->Copy(ForwardNearTransform);
    BackwardTransform->Copy(BackwardNearTransform);
+}
+
+void GameCamera::ResetDistance(char forward) {
+  if (!forward) {
+    BackwardTransform->Copy(BackwardNearTransform);
+  } else {
+    ForwardTransform->Copy(ForwardNearTransform);
+  }
+  
 }
 
 void GameCamera::Awake() {

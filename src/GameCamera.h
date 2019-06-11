@@ -34,6 +34,7 @@ class GameCamera : public GameObject {
    void FarPan(char far, char forward);
    void InitialPan();
    void ResetDistance();
+   void ResetDistance(char forward);
    
    void Awake();
    void Update();

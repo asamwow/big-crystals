@@ -14,6 +14,9 @@ class Scene {
    static float deltaTime;
    static char gameState;
 
+  // dirty hack because I'm tired
+  static char makeSoundEffect;
+
    char lightingEnabled = 1;
 
    std::vector<void *> sceneObjects;

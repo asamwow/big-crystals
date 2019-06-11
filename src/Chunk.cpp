@@ -97,6 +97,7 @@ void Chunk::Generate(float **heights, char ceiling, char farMesh) {
                 glm::max(glm::dot(farMeshNormal, lightDirection), 0.f) * 0.02f;
          }
          float shadow = glm::max(glm::dot(normal, lightDirection), 0.f);
+         // printf("shadw %f\n", shadow);
 
          // default color
          if (ceiling) {

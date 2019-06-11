@@ -10,6 +10,7 @@ class Camera *Scene::mainCamera;
 class Transform *Scene::mainPlayer;
 float Scene::deltaTime;
 char Scene::gameState;
+char Scene::makeSoundEffect;
 
 void Scene::Awake() {
    // awake game object functions

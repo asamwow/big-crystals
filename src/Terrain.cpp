@@ -55,11 +55,36 @@ void Terrain::Awake() {
    printf("done\n");
 }
 
+float GetSingleHeight(float x, float z) {
+  return (Terrain::mainTerrain->heightMap->GetPixel(
+                                                    x + MAP_SIZE_X * CHUNK_GRID, z + MAP_SIZE_Z * CHUNK_GRID) /
+          255.f) *
+    MAX_AMPLITUDE;
+}
+
 float Terrain::GetHeight(float x, float z) {
-   return (Terrain::mainTerrain->heightMap->GetPixel(
-               x + MAP_SIZE_X * CHUNK_GRID, z + MAP_SIZE_Z * CHUNK_GRID) /
-           255.f) *
-          MAX_AMPLITUDE;
+  float sumHeight = 0.f;
+  int sumCount = 0;
+  sumHeight += GetSingleHeight(x, z);
+  sumCount++;
+  if (x < MAP_SIZE_X * CHUNK_GRID-2) {
+    sumHeight += GetSingleHeight(x+1, z);
+    sumCount++;
+  }
+  if (x > -MAP_SIZE_X * CHUNK_GRID+2) {
+    sumHeight += GetSingleHeight(x-1, z);
+    sumCount++;
+  }
+  if (z < MAP_SIZE_Z * CHUNK_GRID-2) {
+    sumHeight += GetSingleHeight(x, z+1);
+    sumCount++;
+  }
+  if (z > -MAP_SIZE_Z * CHUNK_GRID+2) {
+    sumHeight += GetSingleHeight(x, z-1);
+    sumCount++;
+  }
+  sumHeight /= sumCount;
+  return sumHeight;
 }
 
 float Terrain::GetCeiling(float x, float z) {

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <irrKlang.h>
 
 #include "Bulb.h"
 #include "Camera.h"
@@ -41,6 +42,8 @@
 
 using namespace std;
 using namespace glm;
+using namespace irrklang;
+#pragma comment(lib, "irrKlang.lib") // link with irrKlang.dll
 
 class Application : public EventCallbacks {
 
@@ -59,6 +62,8 @@ class Application : public EventCallbacks {
    unsigned int depthMap;
    unsigned int pingpongFBO[2];
    unsigned int pingpongColorbuffers[2];
+
+   ISoundEngine *SoundEngine;
 
    time_t currentTime;
    Scene scene;
@@ -94,6 +99,9 @@ class Application : public EventCallbacks {
                 (class KeyboardInput *)player->RemoveComponent(
                     Type::KeyboardInput);
             gameCamera->AddComponent(gameCamera->keyboardInput);
+            mouseInput =
+              (class MouseInput *)gameCamera->AddComponent(
+                                                           Type::MouseInput);
          }
       }
       if (key == GLFW_KEY_L && action == GLFW_PRESS) {
@@ -378,6 +386,7 @@ int main(int argc, char *argv[]) {
    application->scene = Scene();
    Scene::currentScene = &application->scene;
    Scene::gameState = 'p';
+   Scene::makeSoundEffect = false;
 
    // camera
    application->gameCamera = (class GameCamera *)malloc(sizeof(GameCamera));
@@ -397,7 +406,7 @@ int main(int argc, char *argv[]) {
        glm::quat(-0.998704, -0.052789, -0.004661, 0.001826));
    application->gameCamera->BackwardTransform = new Transform(*application->gameCamera->BackwardNearTransform);
    application->gameCamera->ForwardFarTransform = new Transform(
-       glm::vec3(22.512974, 12.103701, -123.862465), glm::vec3(1.f, 1.f, 1.f),
+       glm::vec3(10.512974, 12.103701, -123.862465), glm::vec3(1.f, 1.f, 1.f),
        glm::quat(0.032620, -0.000033, 0.999496, 0.003819));
    application->gameCamera->GroundUpTransform = new Transform(
        glm::vec3(-1.332427f, -0.791858f, -3.887569f), glm::vec3(1.f, 1.f, 1.f),
@@ -506,6 +515,10 @@ int main(int argc, char *argv[]) {
 
    printf("Starting GameObjects\n");
    application->scene.Start();
+
+   application->SoundEngine = createIrrKlangDevice();
+   ISound* music = application->SoundEngine->play2D("../resources/music.mp3",
+		true, false, true, ESM_AUTO_DETECT, true);
    
    srand(time(NULL));
    auto lastTime = std::chrono::high_resolution_clock::now();
@@ -543,6 +556,17 @@ int main(int argc, char *argv[]) {
       if (Scene::gameState != 'l') {
          application->render(Scene::deltaTime);
          application->scene.PhysicsUpdate(Scene::deltaTime);
+      }
+
+      if (Scene::makeSoundEffect) {
+        ISound *weome = application->SoundEngine->play2D("../resources/weome.wav",
+                                         false, false, true, ESM_AUTO_DETECT, true);
+        if (Scene::makeSoundEffect == 2) {
+          weome->setVolume(0.05f);
+        } else {
+          weome->setVolume(0.15f);
+        }
+        Scene::makeSoundEffect = false;
       }
 
       glfwSwapBuffers(windowManager->getHandle());

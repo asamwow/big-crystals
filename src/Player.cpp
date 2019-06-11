@@ -11,6 +11,14 @@ void Player::Awake() {
 void Player::Update() {
    Bulb::Update();
    childDepth = 0;
+   delay += Scene::deltaTime;
+   if (delay > 1.f) {
+     if (flipQueued) {
+       gameCamera->ResetDistance(forward);
+       gameCamera->FlipPan(forward);
+       flipQueued = false;
+     }
+   }
    glm::vec3 direction = glm::vec3(0, 0, 0);
    if (keyboardInput != NULL) {
       if (keyboardInput->forwardInput == -1) {
@@ -23,11 +31,6 @@ void Player::Update() {
          direction.y = -30.f;
       }
       if (keyboardInput->rightInput == -1) {
-         // glm::vec3 cameraRight = Scene::mainCamera->transform->right();
-         // cameraRight.y = 0.f;
-         // cameraRight.x *= -1.f;
-         // transform.position +=
-         //     glm::normalize(cameraRight) * Scene::deltaTime * RUN_SPEED;
          direction.y = 30.f;
       }
       if (!forward) {
@@ -48,25 +51,31 @@ void Player::Update() {
          continue;
       }
       if (distance < 1000.f) {
-         if (!far) {
+         if (far == 0) {
             far = i+1;
             gameCamera->FarPan(far, forward);
          }
       } else {
-         if (far && !flippedWhileFar) {
+         if (far > 0 ) {
             gameCamera->FarPan(false, forward);
          }
          far = false;
-         flippedWhileFar = false;
       }
    }
 }
 
 void Player::Flip() {
    Bulb::Flip();
-   if (far) {
-      flippedWhileFar = true;
-      gameCamera->ResetDistance();
-   }
-   gameCamera->FlipPan(forward);
+   flipQueued = true;
+   delay = 0.f;
+}
+
+void Player::OnCollision(class Collider *other) {
+  Bulb::OnCollision(other);
+  CrystalStructure *crystal = (CrystalStructure *)(other->gameObject);
+  if (crystal->miniCrystal) {
+    Scene::makeSoundEffect = 2;
+  } else {
+    Scene::makeSoundEffect = 1;
+  }
 }
